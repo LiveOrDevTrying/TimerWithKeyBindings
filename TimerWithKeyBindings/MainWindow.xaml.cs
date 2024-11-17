@@ -11,61 +11,52 @@ namespace TimerWithKeyBindings
     public partial class MainWindow : Window
     {
         private int _elapsedSeconds;
-        private string? _outputFilePath;
+        private string _outputFilePath;
         private string _settingsFilePath;
         private CancellationTokenSource? _cancellationTokenSource;
+        private readonly string _appDataFolderPath;
 
         public MainWindow()
         {
             InitializeComponent();
 
-            // Define settings file path
-            _settingsFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "settings.txt");
+            // Define the base folder path under LocalApplicationData
+            _appDataFolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "TimerWithKeyBindings");
 
-            // Load the file path from settings or set the default path
-            LoadFilePath();
+            // Ensure the folder exists
+            Directory.CreateDirectory(_appDataFolderPath);
 
-            // Load timer state from file
+            // Define file paths
+            _settingsFilePath = Path.Combine(_appDataFolderPath, "settings.txt");
+            _outputFilePath = Path.Combine(_appDataFolderPath, "TimerOutput.txt");
+
+            // Load settings and timer state
+            LoadSettings();
             LoadTimerState();
 
-            // Start listening for global key presses
+            // Subscribe to global key events
             KeyInterceptor.KeyPressed += OnGlobalKeyPressed;
             KeyInterceptor.StartListening();
 
+            // Subscribe to the window closing event
             Closing += OnWindowClosing;
         }
 
-        private void LoadFilePath()
+        private void LoadSettings()
         {
-            try
+            if (File.Exists(_settingsFilePath))
             {
-                if (File.Exists(_settingsFilePath))
+                string savedPath = File.ReadAllText(_settingsFilePath);
+                if (!string.IsNullOrWhiteSpace(savedPath) && Path.IsPathFullyQualified(savedPath))
                 {
-                    _outputFilePath = File.ReadAllText(_settingsFilePath);
-                    if (string.IsNullOrWhiteSpace(_outputFilePath) || !Path.IsPathFullyQualified(_outputFilePath))
-                    {
-                        SetDefaultFilePath();
-                    }
+                    _outputFilePath = savedPath;
                 }
-                else
-                {
-                    SetDefaultFilePath();
-                }
-            }
-            catch
-            {
-                SetDefaultFilePath();
             }
 
             FilePathTextBox.Text = _outputFilePath;
         }
 
-        private void SetDefaultFilePath()
-        {
-            _outputFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "TimerOutput.txt");
-        }
-
-        private void SaveFilePath()
+        private void SaveSettings()
         {
             try
             {
@@ -73,7 +64,7 @@ namespace TimerWithKeyBindings
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error saving file path: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                ShowError($"Error saving settings: {ex.Message}");
             }
         }
 
@@ -81,25 +72,19 @@ namespace TimerWithKeyBindings
         {
             try
             {
-                if (!File.Exists(_outputFilePath))
+                if (File.Exists(_outputFilePath))
                 {
-                    File.WriteAllText(_outputFilePath, "00:00:00");
-                }
-
-                string content = File.ReadAllText(_outputFilePath);
-
-                if (TimeSpan.TryParse(content, out TimeSpan savedTime))
-                {
-                    _elapsedSeconds = (int)savedTime.TotalSeconds;
+                    string content = File.ReadAllText(_outputFilePath);
+                    _elapsedSeconds = TimeSpan.TryParse(content, out var savedTime) ? (int)savedTime.TotalSeconds : 0;
                 }
                 else
                 {
-                    _elapsedSeconds = 0;
+                    SaveTimerState();
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error loading timer state: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                ShowError($"Error loading timer state: {ex.Message}");
                 _elapsedSeconds = 0;
             }
 
@@ -110,24 +95,17 @@ namespace TimerWithKeyBindings
         {
             try
             {
-                if (!File.Exists(_outputFilePath))
-                {
-                    File.Create(_outputFilePath!).Dispose();
-                }
-
-                TimeSpan time = TimeSpan.FromSeconds(_elapsedSeconds);
-                File.WriteAllText(_outputFilePath!, time.ToString(@"hh\:mm\:ss"));
+                File.WriteAllText(_outputFilePath, TimeSpan.FromSeconds(_elapsedSeconds).ToString(@"hh\:mm\:ss"));
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error saving timer state: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                ShowError($"Error saving timer state: {ex.Message}");
             }
         }
 
         private void StartTimer()
         {
-            if (_cancellationTokenSource != null)
-                return;
+            if (_cancellationTokenSource != null) return;
 
             _cancellationTokenSource = new CancellationTokenSource();
             var token = _cancellationTokenSource.Token;
@@ -139,7 +117,7 @@ namespace TimerWithKeyBindings
                     while (!token.IsCancellationRequested)
                     {
                         await Task.Delay(1000, token);
-                        Interlocked.Increment(ref _elapsedSeconds); // Thread-safe increment
+                        Interlocked.Increment(ref _elapsedSeconds);
                         Dispatcher.Invoke(() =>
                         {
                             UpdateTimerDisplay();
@@ -156,37 +134,21 @@ namespace TimerWithKeyBindings
 
         private void StopTimer()
         {
-            if (_cancellationTokenSource != null)
-            {
-                _cancellationTokenSource.Cancel();
-                _cancellationTokenSource.Dispose();
-                _cancellationTokenSource = null;
-            }
+            _cancellationTokenSource?.Cancel();
+            _cancellationTokenSource?.Dispose();
+            _cancellationTokenSource = null;
         }
 
         private void ResetTimer()
         {
-            if (_cancellationTokenSource != null)
-            {
-                // Timer is running, reset and continue
-                Interlocked.Exchange(ref _elapsedSeconds, 0);
-                UpdateTimerDisplay();
-                SaveTimerState();
-            }
-            else
-            {
-                // Timer is stopped, reset but do not start
-                Interlocked.Exchange(ref _elapsedSeconds, 0);
-                UpdateTimerDisplay();
-                SaveTimerState();
-            }
+            _elapsedSeconds = 0;
+            UpdateTimerDisplay();
+            SaveTimerState();
         }
 
         private void UpdateTimerDisplay()
         {
-            int elapsedSeconds = Interlocked.CompareExchange(ref _elapsedSeconds, 0, 0); // Thread-safe read
-            TimeSpan time = TimeSpan.FromSeconds(elapsedSeconds);
-            TimerTextBlock.Text = time.ToString(@"hh\:mm\:ss");
+            TimerTextBlock.Text = TimeSpan.FromSeconds(_elapsedSeconds).ToString(@"hh\:mm\:ss");
         }
 
         private void ChangeFolderButton_Click(object sender, RoutedEventArgs e)
@@ -203,7 +165,7 @@ namespace TimerWithKeyBindings
             {
                 _outputFilePath = dialog.FileName;
                 FilePathTextBox.Text = _outputFilePath;
-                SaveFilePath();
+                SaveSettings();
                 SaveTimerState();
             }
         }
@@ -216,31 +178,46 @@ namespace TimerWithKeyBindings
 
         private void OnGlobalKeyPressed(Key key)
         {
-            // Respond to Shift + 1, Shift + 2, Shift + 3
-            if (key == Key.D1)
+            switch (key)
             {
-                StartTimer();
-            }
-            else if (key == Key.D2)
-            {
-                StopTimer();
-            }
-            else if (key == Key.D3)
-            {
-                ResetTimer();
+                case Key.D1:
+                    StartTimer();
+                    break;
+                case Key.D2:
+                    StopTimer();
+                    break;
+                case Key.D3:
+                    ResetTimer();
+                    break;
             }
         }
 
-        private void OnWindowClosing(object? sender, System.ComponentModel.CancelEventArgs e)
+        private void OnWindowClosing(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            // Stop the timer
             StopTimer();
+
+            // Save the timer state and settings
             SaveTimerState();
-            SaveFilePath();
+            SaveSettings();
+
+            // Unsubscribe from global key events
+            KeyInterceptor.KeyPressed -= OnGlobalKeyPressed;
+
+            // Stop global key listener
             KeyInterceptor.StopListening();
+
+            // Unsubscribe from window closing event
+            Closing -= OnWindowClosing;
         }
 
         private void StartButton_Click(object sender, RoutedEventArgs e) => StartTimer();
         private void StopButton_Click(object sender, RoutedEventArgs e) => StopTimer();
         private void ResetButton_Click(object sender, RoutedEventArgs e) => ResetTimer();
+
+        private void ShowError(string message)
+        {
+            MessageBox.Show(message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 }

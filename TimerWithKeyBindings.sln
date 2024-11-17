@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimerWithKeyBindings", "Tim
 EndProject
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "TimerWithKeyBindingsInstaller", "TimerWithKeyBindingsInstaller\TimerWithKeyBindingsInstaller.vdproj", "{F907C8F4-0E68-4BBF-945B-52ADD1F1F4D3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimerWithKeyBindingsCustomActions", "TimerWithKeyBindingsCustomActions\TimerWithKeyBindingsCustomActions.csproj", "{1E0A0F8B-3AD7-47E9-8B4C-FBB0FFC1B288}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,26 @@ Global
 		{F907C8F4-0E68-4BBF-945B-52ADD1F1F4D3}.Release|ARM64.ActiveCfg = Release
 		{F907C8F4-0E68-4BBF-945B-52ADD1F1F4D3}.Release|x64.ActiveCfg = Release
 		{F907C8F4-0E68-4BBF-945B-52ADD1F1F4D3}.Release|x86.ActiveCfg = Release
+		{1E0A0F8B-3AD7-47E9-8B4C-FBB0FFC1B288}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1E0A0F8B-3AD7-47E9-8B4C-FBB0FFC1B288}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1E0A0F8B-3AD7-47E9-8B4C-FBB0FFC1B288}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{1E0A0F8B-3AD7-47E9-8B4C-FBB0FFC1B288}.Debug|ARM.Build.0 = Debug|Any CPU
+		{1E0A0F8B-3AD7-47E9-8B4C-FBB0FFC1B288}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{1E0A0F8B-3AD7-47E9-8B4C-FBB0FFC1B288}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{1E0A0F8B-3AD7-47E9-8B4C-FBB0FFC1B288}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{1E0A0F8B-3AD7-47E9-8B4C-FBB0FFC1B288}.Debug|x64.Build.0 = Debug|Any CPU
+		{1E0A0F8B-3AD7-47E9-8B4C-FBB0FFC1B288}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{1E0A0F8B-3AD7-47E9-8B4C-FBB0FFC1B288}.Debug|x86.Build.0 = Debug|Any CPU
+		{1E0A0F8B-3AD7-47E9-8B4C-FBB0FFC1B288}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1E0A0F8B-3AD7-47E9-8B4C-FBB0FFC1B288}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1E0A0F8B-3AD7-47E9-8B4C-FBB0FFC1B288}.Release|ARM.ActiveCfg = Release|Any CPU
+		{1E0A0F8B-3AD7-47E9-8B4C-FBB0FFC1B288}.Release|ARM.Build.0 = Release|Any CPU
+		{1E0A0F8B-3AD7-47E9-8B4C-FBB0FFC1B288}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{1E0A0F8B-3AD7-47E9-8B4C-FBB0FFC1B288}.Release|ARM64.Build.0 = Release|Any CPU
+		{1E0A0F8B-3AD7-47E9-8B4C-FBB0FFC1B288}.Release|x64.ActiveCfg = Release|Any CPU
+		{1E0A0F8B-3AD7-47E9-8B4C-FBB0FFC1B288}.Release|x64.Build.0 = Release|Any CPU
+		{1E0A0F8B-3AD7-47E9-8B4C-FBB0FFC1B288}.Release|x86.ActiveCfg = Release|Any CPU
+		{1E0A0F8B-3AD7-47E9-8B4C-FBB0FFC1B288}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
